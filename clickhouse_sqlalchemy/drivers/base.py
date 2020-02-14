@@ -303,20 +303,6 @@ class ClickHouseCompiler(compiler.SQLCompiler):
 
         return text
 
-    def visit_insert(self, insert_stmt, asfrom=False, **kw):
-        rv = super(ClickHouseCompiler, self).visit_insert(
-            insert_stmt, asfrom=asfrom, **kw
-        )
-
-        pos = rv.rfind('VALUES (')
-        # Remove (%s)-templates from VALUES clause if exists.
-        # ClickHouse server since version 19.3.3 parse query after VALUES and
-        # allows inplace parameters.
-        # Example: INSERT INTO test (x) VALUES (1), (2).
-        if pos != -1:
-            rv = rv[:pos + 6]
-        return rv
-
     def visit_update(self, update_stmt, asfrom=False, **kw):
         extra_froms = update_stmt._extra_froms
         is_multitable = bool(extra_froms)
@@ -332,7 +318,7 @@ class ClickHouseCompiler(compiler.SQLCompiler):
         )
 
         text = "ALTER TABLE "
- 
+
         table_text = self.update_tables_clause(
             update_stmt, update_stmt.table, render_extra_froms, **kw
         )
